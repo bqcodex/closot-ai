@@ -2,83 +2,48 @@ from fastapi import FastAPI, Depends, HTTPException, status, Security
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
-
-from transformers import AutoModelForCausalLM, AutoTokenizer, TextIteratorStreamer
-from threading import Thread
-import torch
+from mlx_lm import load, generate
+from mlx_lm.sample_utils import make_sampler
 import os
-
-PRODUCT_CONTEXT = """
-You are an AI assistant embedded inside closot, a productivity and collaboration application.
-"""
 
 app = FastAPI()
 
-MODEL_NAME = "Qwen/Qwen3-8B"
-
-# ===== API KEY CONFIG =====
-API_KEY = os.getenv("LLM_API_KEY")
+API_KEY = os.getenv("LLM_API_KEY", "super-secret-key")
 api_key_header = APIKeyHeader(name="Authorization", auto_error=False)
-
 
 def verify_api_key(api_key: str = Security(api_key_header)):
     if api_key != f"Bearer {API_KEY}":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or missing API key",
-        )
+        raise HTTPException(status_code=401, detail="Invalid API key")
 
-
-tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-
-model = AutoModelForCausalLM.from_pretrained(
-    MODEL_NAME,
-    torch_dtype="auto",
-    device_map="auto"
-)
-
+MODEL_PATH = "/Users/mac/ai/models/qwen3-8b-4bit"
+model, tokenizer = load(MODEL_PATH)
 
 class PromptRequest(BaseModel):
     prompt: str
 
-
 @app.post("/generate-stream")
-async def generate_stream(
-    request: PromptRequest,
-    _: str = Depends(verify_api_key)   # 👈 PROTECTED
-):
-
-    messages = [
-        {"role": "system", "content": PRODUCT_CONTEXT},
-        {"role": "user", "content": request.prompt}
-    ]
-
-    text = tokenizer.apply_chat_template(
+async def generate_stream(request: PromptRequest, _: str = Depends(verify_api_key)):
+    messages = [{"role": "user", "content": request.prompt}]
+    prompt = tokenizer.apply_chat_template(
         messages,
         tokenize=False,
         add_generation_prompt=True,
-        enable_thinking=False
+        enable_thinking=False  
     )
+    
+    sampler = make_sampler(temp=0.1, top_p=0.95)
+    
+    def stream_tokens():  
+        for token in generate(
+            model, tokenizer, prompt=prompt,
+            max_tokens=512,
+            sampler=sampler,
+            verbose=False
+        ):
+            yield token  
+    
+    return StreamingResponse(stream_tokens(), media_type="text/plain")
 
-    model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
-
-    streamer = TextIteratorStreamer(
-        tokenizer,
-        skip_prompt=True,
-        skip_special_tokens=True
-    )
-
-    generation_kwargs = dict(
-        **model_inputs,
-        streamer=streamer,
-        max_new_tokens=1024
-    )
-
-    thread = Thread(target=model.generate, kwargs=generation_kwargs)
-    thread.start()
-
-    def token_generator():
-        for new_text in streamer:
-            yield new_text
-
-    return StreamingResponse(token_generator(), media_type="text/plain")
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
