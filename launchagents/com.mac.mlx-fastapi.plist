@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.mac.mlx-fastapi</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/mac/ai-server/venv/bin/uvicorn</string>
+        <string>app:app</string>
+        <string>--host</string>
+        <string>0.0.0.0</string>
+        <string>--port</string>
+        <string>8000</string>
+        <string>--timeout-keep-alive</string>
+        <string>300</string>
+        <string>--reload</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/mac/ai-server</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/mac/ai-server/mlx-server.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/mac/ai-server/mlx-server.err</string>
+</dict>
+</plist>

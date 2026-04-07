@@ -1,0 +1,23 @@
+# Core ML framework (Apple Silicon / MLX)
+mlx==0.31.0
+mlx-lm==0.31.1
+mlx-metal==0.31.0
+
+# Web server
+fastapi==0.135.1
+uvicorn==0.41.0
+starlette==0.52.1
+pydantic==2.12.5
+
+# Model loading & tokenization
+transformers==5.3.0
+tokenizers==0.22.2
+safetensors==0.7.0
+huggingface_hub==1.6.0
+
+# Utilities
+numpy==2.4.3
+rich==14.3.3
+typer==0.24.1
+httpx==0.28.1
+anyio==4.12.1

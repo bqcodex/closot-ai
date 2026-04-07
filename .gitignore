@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# Model directories (downloaded separately — see README)
+qwen25-3b-4bit/
+qwen25-3b-mlx/
+*.safetensors
+*.bin
+*.gguf
+
+# Logs
+*.log
+*.err
+mlx-server.log
+mlx-server.err
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Environment variables
+.env
+.env.local
+
+# Cloudflare credentials (keep config.yml but NOT the JSON credentials)
+.cloudflared/*.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude local settings
+.claude/settings.local.json
